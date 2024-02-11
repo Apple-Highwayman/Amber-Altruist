@@ -1,5 +1,3 @@
-# UNFINISHED. NON FUNCTIONAL
-
 # Amber Altruist:
 #
 # Welcome to Amber Altruist, the app that makes identifying missing
@@ -10,6 +8,9 @@ import feedparser
 from datetime import *
 from tkinter import *
 from tkinter.ttk import *
+from PIL import Image, ImageTk
+from urllib.request import urlopen
+from io import BytesIO
 
 
 stateDict = {
@@ -79,32 +80,8 @@ def main():
         returning(URL)
         stateFile.close()
         return
-    # Gathers the state appropriate URI and parses it.
-    stateFile.close()
-    URL = takeState(input("Insert the two letter state code: "))
-    feed = feedparser.parse(URL)
-    print()
-
-    # Prints names, dates/locations of disappearance, and image url of every
-    # queried missing child in the state who went missing in the last 30 days.
-    iterator = 0
-    while iterator < len(feed.entries):
-        spot = feed.entries[iterator]['description'].find("Missing:") + 9
-        spot2 = feed.entries[iterator]['description'].find("ANYONE")
-        spot3 = feed.entries[iterator]['description'].find("CONTACT")
-        date = datetime.strptime(feed.entries[iterator]['description'][spot :spot + 10:1],
-                                 '%m/%d/%Y')
-        if (spot != -1) and (date > datetime.now() - timedelta(days=30)):
-            
-            print(feed.entries[iterator]['title'])
-            print(feed.entries[iterator]['description'][spot :spot2 - 1:1])
-            print(feed.entries[iterator].enclosures[0]['url'])
-            print(feed.entries[iterator]['description'][spot3: : 1])
-            
-            print()
-        iterator += 1
-
-
+    
+    
 # Saves state data, unless this step is skipped.
 def takeState(str):
     stateFile = open("state.txt", "r+")
@@ -137,6 +114,7 @@ def newStart():
     root.resizable(False, False)
     root.title("Amber Altruist")
     root.geometry('350x600')
+    root.config(bg='orange')
     n = StringVar()
     combobox = Combobox(root, width = 25, textvariable = n, state="readonly")
     combobox['values'] = stateList
@@ -148,6 +126,7 @@ def newStart():
     button.place(relx=0.5, rely=0.15, anchor=CENTER)
     clearbutton.place(relx=0.5, rely=0.2, anchor=CENTER)
 
+
     root.mainloop()
 
 # Initiates a return startup sequence with a known state.
@@ -155,13 +134,39 @@ def newStart():
 def returning(URL):
     feed = feedparser.parse(URL)
 
-
     root = Tk()
     root.resizable(False, False)
     root.title("Amber Altruist")
     root.geometry('350x600') 
+    root.config(bg='orange')
+
+    imageurl = feed.entries[0].enclosures[0]['url']
+    spot = feed.entries[0]['description'].find("Missing:") + 9
+    spot2 = feed.entries[0]['description'].find("ANYONE") - 1
+    spot3 = feed.entries[0]['description'].find("CONTACT")
+    spot4 = feed.entries[0]['title'].find(':') + 2
+    spot5 = feed.entries[0]['title'].find('(') - 1
+    missingname = feed.entries[0]['title'][spot4: spot5:1]
+    missingline = feed.entries[0]['description'][spot: spot2: 1]
+    missingcall = feed.entries[0]['description'][spot3: : 1]
+
+    openurl = urlopen(imageurl)
+    rawData = openurl.read()
+    openurl.close()
+
+    imagefile = Image.open(BytesIO(rawData))
+    missingimage = ImageTk.PhotoImage(imagefile)
+    label = Label(image=missingimage)
+    label.image = missingimage
+    label.pack()
+    labelText = Label(text=f"{missingname}\n{missingline}\n{missingcall}", justify=CENTER, background='orange')
+    labelText.pack()
+
+    clearbutton = Button(root, width = 15, text="Clear State", command = clearState)
+    clearbutton.place(relx=0.5, rely=0.965, anchor=CENTER)
 
 
+    root.mainloop()
 
 # Starts the program    
 main() #end of file.
