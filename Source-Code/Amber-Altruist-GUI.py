@@ -146,24 +146,30 @@ def returning(URL):
     spot3 = feed.entries[0]['description'].find("CONTACT")
     spot4 = feed.entries[0]['title'].find(':') + 2
     spot5 = feed.entries[0]['title'].find('(') - 1
+    spot6 = feed.entries[0]['description'].find("(")
     missingname = feed.entries[0]['title'][spot4: spot5:1]
     missingline = feed.entries[0]['description'][spot: spot2: 1]
-    missingcall = feed.entries[0]['description'][spot3: : 1]
+    missingcall = feed.entries[0]['description'][spot3: spot6 - 1: 1]
+    missingphone = feed.entries[0]['description'][spot6: : 1]
 
     openurl = urlopen(imageurl)
     rawData = openurl.read()
     openurl.close()
 
     imagefile = Image.open(BytesIO(rawData))
+    imagefile = imagefile.resize((345, 500))
     missingimage = ImageTk.PhotoImage(imagefile)
     label = Label(image=missingimage)
     label.image = missingimage
     label.pack()
-    labelText = Label(text=f"{missingname}\n{missingline}\n{missingcall}", justify=CENTER, background='orange')
+    
+    
+    labelText = Label(text=f"{missingname}\n{missingline}\n{missingcall}\n{missingphone}", justify=CENTER, background='orange')
     labelText.pack()
 
     clearbutton = Button(root, width = 15, text="Clear State", command = clearState)
-    clearbutton.place(relx=0.5, rely=0.965, anchor=CENTER)
+    clearbutton.place(relx=0.5, rely=0.97, anchor=CENTER)
+
 
 
     root.mainloop()
